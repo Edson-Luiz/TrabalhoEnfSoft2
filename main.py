@@ -3,6 +3,14 @@ from tkinter import messagebox
 import customtkinter
 from customtkinter import CTkLabel, CTkEntry, CTkButton, CTkFrame
 import matplotlib.pyplot as plt
+import json
+import requests
+
+couchdb_url = 'http://127.0.0.1:5984/'
+url_banco = f'{couchdb_url}/gerenciador_despesas_db/'
+
+username = 'edsdlc'
+password = 'edsonabc12312'
 
 class Despesa:
     def __init__(self, descricao, valor):
@@ -99,14 +107,31 @@ class InterfaceGrafica:
 
         botao_adicionar = customtkinter.CTkButton(janela_adicionar_despesa, text="Adicionar Despesa", font=("Comics Sans MS", 10, "bold"), command=lambda: self.adicionar_despesa(entrada_descricao.get(), entrada_valor.get(), janela_adicionar_despesa))
         botao_adicionar.pack(pady=20)
-
+    
     def adicionar_despesa(self, descricao, valor, janela):
         if descricao and valor:
             despesa = Despesa(descricao, float(valor))
             self.lista_despesas.adicionar_despesa(despesa)
+            self.adicionar_despesa_no_couchdb(descricao, valor)
             janela.destroy()
         else:
             messagebox.showerror("Erro", "Preencha todos os campos.")
+
+    def adicionar_despesa_no_couchdb(self, descricao, valor):
+        despesa = {
+            'descricao': descricao,
+            'valor': valor
+        }
+
+        # Envie a despesa para o CouchDB
+        response = requests.post(url_banco, auth = (username, password), json=despesa)
+
+        # Verifique se a operação foi bem-sucedida
+        if response.status_code == 201:
+            print("Despesa adicionada com sucesso ao CouchDB.")
+        else:
+            print("Erro ao adicionar despesa ao CouchDB.")
+
 
     def janela_adicionar_salario(self):
         janela_adicionar_salario = tk.Toplevel(self.root)
@@ -135,29 +160,9 @@ class InterfaceGrafica:
         soma_despesas = sum(despesa.valor for despesa in self.lista_despesas.despesas)
         return soma_despesas
 
-    # def janela_ver_despesas(self):
-    #     janela_ver_despesas = tk.Toplevel(self.root)
-    #     janela_ver_despesas.title("Ver Despesas")
-
-    #     label_despesas = tk.Label(janela_ver_despesas, text="Lista de Despesas:")
-    #     label_despesas.pack(pady=10)
-
-    #     exibicao_despesas_var = tk.StringVar()  # Crie uma nova variável de controle
-    #     exibicao_despesas_var.set("")  # Inicialize a variável com uma string vazia
-
-    #     exibicao_despesas = tk.Label(janela_ver_despesas, textvariable=exibicao_despesas_var, wraplength=300, justify="left")
-    #     exibicao_despesas.pack()
-
-    #     fechar_botao = customtkinter.CTkButton(janela_ver_despesas, text="Fechar", font=("Comics Sans MS", 10, "bold"), command=janela_ver_despesas.destroy)
-    #     fechar_botao.pack(pady=20)
-
-    #     observador_despesas = ObservadorDespesas(self.lista_despesas, exibicao_despesas_var)  # Passa a variável de controle como parâmetro
-    #     self.lista_despesas.registrar_observador(observador_despesas)
-
-
     def janela_gerar_graficos(self):
-        janela_gerar_graficos = tk.Toplevel(self.root)
-        janela_gerar_graficos.title("Gráfico de Despesas")
+        # janela_gerar_graficos = tk.Toplevel(self.root)
+        # janela_gerar_graficos.title("Gráfico de Despesas")
 
         if hasattr(self, 'salario') and self.lista_despesas.despesas:
 
@@ -177,8 +182,8 @@ class InterfaceGrafica:
             messagebox.showerror("Erro", "Por favor, adicione seu salário e despesas antes de gerar gráficos.")
 
     def janela_gerar_saldo(self):
-        janela_gerar_saldo = tk.Toplevel(self.root)
-        janela_gerar_saldo.title("Saldo")
+        # janela_gerar_saldo = tk.Toplevel(self.root)
+        # janela_gerar_saldo.title("Saldo")
 
         if hasattr(self, 'salario') and self.lista_despesas.despesas:
             soma_despesas = self.calcular_soma_despesas()

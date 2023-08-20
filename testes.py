@@ -1,47 +1,47 @@
 import unittest
 import tkinter as tk
-from main import Expense, ExpenseList, ExpenseObserver, GUI
+from main import Despesa, ListaDespesas, ObservadorDespesas, InterfaceGrafica
 
 
-class TestExpenseList(unittest.TestCase):
-    def test_add_expense(self):
-        expense_list = ExpenseList()
-        expense = Expense("Test Expense", 50)
-        expense_list.add_expense(expense)
-        self.assertEqual(len(expense_list.expenses), 1)
+class TestListaDespesas(unittest.TestCase):
+    def test_adicionar_despesa(self):
+        lista_despesas = ListaDespesas()
+        despesa = Despesa("Despesa de Teste", 50)
+        lista_despesas.adicionar_despesa(despesa)
+        self.assertEqual(len(lista_despesas.despesas), 1)
 
-    def test_register_observer(self):
-        expense_list = ExpenseList()
-        observer = ExpenseObserver(expense_list, tk.Tk())
-        expense_list.register_observer(observer)
-        self.assertEqual(len(expense_list.observers), 1)
+    def test_registrar_observador(self):
+        lista_despesas = ListaDespesas()
+        observador = ObservadorDespesas(lista_despesas, tk.Tk())
+        lista_despesas.registrar_observador(observador)
+        self.assertEqual(len(lista_despesas.observadores), 1)
 
-class TestExpenseObserver(unittest.TestCase):
-    def test_update(self):
-        expense_list = ExpenseList()
-        observer = ExpenseObserver(expense_list, tk.Tk())
-        expense_list.register_observer(observer)
+class TestObservadorDespesas(unittest.TestCase):
+    def test_atualizar(self):
+        lista_despesas = ListaDespesas()
+        observador = ObservadorDespesas(lista_despesas, tk.Tk())
+        lista_despesas.registrar_observador(observador)
 
-        expense = Expense("Test Expense", 50)
-        expense_list.add_expense(expense)
+        despesa = Despesa("Despesa de Teste", 50)
+        lista_despesas.adicionar_despesa(despesa)
 
-        self.assertIn("Test Expense", observer.expenses_display.cget("text"))
+        self.assertIn("Despesa de Teste", observador.exibicao_despesas.cget("text"))
 
-class TestGUI(unittest.TestCase):
-    def test_add_expense(self):
+class TestInterfaceGrafica(unittest.TestCase):
+    def test_adicionar_despesa(self):
         root = tk.Tk()
-        expense_list = ExpenseList()
-        app = GUI(root, expense_list)
+        lista_despesas = ListaDespesas()
+        app = InterfaceGrafica(root, lista_despesas)
 
-        description_entry = app.description_entry
-        amount_entry = app.amount_entry
-        add_button = app.add_button
+        entrada_descricao = app.entrada_descricao
+        entrada_valor = app.entrada_valor
+        botao_adicionar = app.botao_adicionar
 
-        description_entry.insert(0, "Test Expense")
-        amount_entry.insert(0, "50")
-        add_button.invoke()
+        entrada_descricao.insert(0, "Despesa de Teste")
+        entrada_valor.insert(0, "50")
+        botao_adicionar.invoke()
 
-        self.assertEqual(len(expense_list.expenses), 1)
+        self.assertEqual(len(lista_despesas.despesas), 1)
 
 if __name__ == "__main__":
     unittest.main()
