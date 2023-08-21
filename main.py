@@ -52,11 +52,32 @@ class ObservadorDespesas:
         self.lista_despesas.despesas.remove(despesa)
         self.lista_despesas.notificar_observadores()
 
-class InterfaceGrafica:
+class GraficoStrategy:
+    def gerar_grafico(self, categorias, valores):
+        pass
 
+class GraficoBarrasStrategy(GraficoStrategy):
+    def gerar_grafico(self, categorias, valores):
+        plt.bar(categorias, valores, color='blue')
+        plt.xlabel('Categorias')
+        plt.ylabel('Valor')
+        plt.title('Gráfico de Barras')
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.show()
+
+class GraficoSetoresStrategy(GraficoStrategy):
+    def gerar_grafico(self, categorias, valores):
+        plt.pie(valores, labels=categorias, autopct='%1.1f%%', startangle=140)
+        plt.axis('equal')
+        plt.title('Gráfico de Setores')
+        plt.show()
+
+class InterfaceGrafica:
     def __init__(self, root, lista_despesas):
         self.root = root
         self.lista_despesas = lista_despesas
+        self.grafico_strategy = GraficoStrategy()
 
         self.root.title("Gestão de Despesas Residencial")
         self.root.geometry('250x505')
@@ -77,8 +98,11 @@ class InterfaceGrafica:
         self.botao_ver_saldo = customtkinter.CTkButton(self.frame_opcoes, text="Ver Saldo", font=("Comics Sans MS", 15, "bold"), command=self.janela_gerar_saldo, width=100, height=30)
         self.botao_ver_saldo.grid(padx=10, pady=12)
 
-        self.botao_gerar_graficos = customtkinter.CTkButton(self.frame_opcoes, text="Gráfico de Despesas", font=("Comics Sans MS", 15, "bold"), command=self.janela_gerar_graficos, width=100, height=30)
-        self.botao_gerar_graficos.grid(padx=10, pady=12)
+        self.botao_gerar_grafico_barras = customtkinter.CTkButton(self.frame_opcoes, text="Gráfico de Barras", font=("Comics Sans MS", 15, "bold"), command=self.gerar_grafico_barras, width=100, height=30)
+        self.botao_gerar_grafico_barras.grid(padx=10, pady=12)
+
+        self.botao_gerar_grafico_setores = customtkinter.CTkButton(self.frame_opcoes, text="Gráfico de Setores", font=("Comics Sans MS", 15, "bold"), command=self.gerar_grafico_setores, width=100, height=30)
+        self.botao_gerar_grafico_setores.grid(padx=10, pady=12)
 
         self.exibicao_despesas_var = tk.StringVar()
         self.exibicao_despesas_var.set("")
@@ -88,6 +112,49 @@ class InterfaceGrafica:
 
         self.exibicao_despesas = tk.Label(self.frame_exibicao_despesas, textvariable=self.exibicao_despesas_var, justify="left")
         self.exibicao_despesas.pack()
+
+    def gerar_grafico_barras(self):
+        if hasattr(self, 'salario') and self.lista_despesas.despesas:
+            categorias = [despesa.descricao for despesa in self.lista_despesas.despesas]
+            valores = [despesa.valor for despesa in self.lista_despesas.despesas]
+
+            plt.bar(categorias, valores, color='blue')
+            plt.xlabel('Categorias')
+            plt.ylabel('Valor')
+            plt.title('Gráfico de Barras')
+            plt.xticks(rotation=45)
+            plt.tight_layout()
+            plt.show()
+        else:
+            messagebox.showerror("Erro", "Por favor, adicione seu salário e despesas antes de gerar gráficos.")
+
+    def gerar_grafico_setores(self):
+        if hasattr(self, 'salario') and self.lista_despesas.despesas:
+            categorias = [despesa.descricao for despesa in self.lista_despesas.despesas]
+            valores = [despesa.valor for despesa in self.lista_despesas.despesas]
+
+            plt.pie(valores, labels=categorias, autopct='%1.1f%%', startangle=140)
+            plt.axis('equal')
+            plt.title('Gráfico de Setores')
+            plt.show()
+        else:
+            messagebox.showerror("Erro", "Por favor, adicione seu salário e despesas antes de gerar gráficos.")
+
+
+    def usar_grafico_barras(self):
+        self.grafico_strategy = GraficoBarrasStrategy()
+
+    def usar_grafico_setores(self):
+        self.grafico_strategy = GraficoSetoresStrategy()
+
+    def janela_gerar_graficos(self):
+            if hasattr(self, 'salario') and self.lista_despesas.despesas:
+                categorias = [despesa.descricao for despesa in self.lista_despesas.despesas]
+                valores = [despesa.valor for despesa in self.lista_despesas.despesas]
+
+                self.grafico_strategy.gerar_grafico(categorias, valores)
+            else:
+                messagebox.showerror("Erro", "Por favor, adicione seu salário e despesas antes de gerar gráficos.")
 
     def janela_adicionar_despesa(self):
         janela_adicionar_despesa = tk.Toplevel(self.root)
@@ -150,7 +217,7 @@ class InterfaceGrafica:
         try:
             salario = float(salario)
             self.salario = salario
-            self.botao_adicionar_salario.config(state=tk.DISABLED)
+            self.botao_adicionar_salario.configure(state=tk.DISABLED)
             janela.destroy()
             messagebox.showinfo("Salário Adicionado", f"Salário mensal de R$ {salario:.2f} adicionado com sucesso!")
         except ValueError:
@@ -195,7 +262,6 @@ class InterfaceGrafica:
                 cor_texto = 'red'
 
             messagebox.showinfo("Resumo de Gastos", f"Saldo: R$ {diferenca:.2f}")
-            self.ver_despesas()
 
             # Atualize a cor do texto
             self.exibicao_despesas.config(text="", fg=cor_texto)
@@ -210,4 +276,3 @@ if __name__ == "__main__":
     lista_despesas.registrar_observador(observador_despesas)
 
     root.mainloop()
-

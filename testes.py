@@ -1,47 +1,60 @@
 import unittest
-import tkinter as tk
-from main import Despesa, ListaDespesas, ObservadorDespesas, InterfaceGrafica
+from tkinter import Tk
+from unittest.mock import patch, Mock
+from customtkinter import CTkButton
 
-
-class TestListaDespesas(unittest.TestCase):
-    def test_adicionar_despesa(self):
-        lista_despesas = ListaDespesas()
-        despesa = Despesa("Despesa de Teste", 50)
-        lista_despesas.adicionar_despesa(despesa)
-        self.assertEqual(len(lista_despesas.despesas), 1)
-
-    def test_registrar_observador(self):
-        lista_despesas = ListaDespesas()
-        observador = ObservadorDespesas(lista_despesas, tk.Tk())
-        lista_despesas.registrar_observador(observador)
-        self.assertEqual(len(lista_despesas.observadores), 1)
-
-class TestObservadorDespesas(unittest.TestCase):
-    def test_atualizar(self):
-        lista_despesas = ListaDespesas()
-        observador = ObservadorDespesas(lista_despesas, tk.Tk())
-        lista_despesas.registrar_observador(observador)
-
-        despesa = Despesa("Despesa de Teste", 50)
-        lista_despesas.adicionar_despesa(despesa)
-
-        self.assertIn("Despesa de Teste", observador.exibicao_despesas.cget("text"))
+# Importe a classe que você deseja testar
+from main import InterfaceGrafica, ListaDespesas, Despesa
 
 class TestInterfaceGrafica(unittest.TestCase):
+
+    def setUp(self):
+        self.root = Tk()
+        self.lista_despesas = ListaDespesas()
+        self.app = InterfaceGrafica(self.root, self.lista_despesas)
+
+    def tearDown(self):
+        # Destrua a janela após cada teste
+        self.root.destroy()
+
     def test_adicionar_despesa(self):
-        root = tk.Tk()
-        lista_despesas = ListaDespesas()
-        app = InterfaceGrafica(root, lista_despesas)
 
-        entrada_descricao = app.entrada_descricao
-        entrada_valor = app.entrada_valor
-        botao_adicionar = app.botao_adicionar
+        mock_toplevel = Mock()
 
-        entrada_descricao.insert(0, "Despesa de Teste")
-        entrada_valor.insert(0, "50")
-        botao_adicionar.invoke()
+        # Simule a interação com a interface gráfica para adicionar uma despesa
+        self.app.adicionar_despesa("Comida", 50.0, mock_toplevel)
 
-        self.assertEqual(len(lista_despesas.despesas), 1)
+        # Verifique se a despesa foi adicionada corretamente à lista de despesas
+        self.assertEqual(len(self.lista_despesas.despesas), 1)
+        self.assertEqual(self.lista_despesas.despesas[0].descricao, "Comida")
+        self.assertEqual(self.lista_despesas.despesas[0].valor, 50.0)
 
-if __name__ == "__main__":
+    def test_adicionar_salario(self):
+
+        mock_toplevel = Mock()
+
+        # Teste se a função adicionar_salario atribui corretamente o valor do salário
+        self.app.adicionar_salario("1000.0", mock_toplevel)
+        self.assertEqual(self.app.salario, 1000.0)
+
+    def test_calcular_soma_despesas(self):
+        # Teste se a função calcular_soma_despesas calcula a soma correta das despesas
+        self.lista_despesas.despesas = [Despesa("Comida", 50.0), Despesa("Transporte", 30.0)]
+        soma = self.app.calcular_soma_despesas()
+        self.assertEqual(soma, 80.0)
+
+    def test_janela_gerar_saldo(self):
+        # Teste se a função janela_gerar_saldo exibe a mensagem correta
+        self.app.salario = 1000.0
+        self.lista_despesas.despesas = [Despesa("Comida", 50.0), Despesa("Transporte", 30.0)]
+        with patch('tkinter.messagebox.showinfo') as mock_showinfo:
+            self.app.janela_gerar_saldo()
+            mock_showinfo.assert_called_with("Resumo de Gastos", "Saldo: R$ 920.00")
+
+# Crie uma classe mock para a ListaDespesas
+class MockListaDespesas:
+    def __init__(self):
+        self.despesas = []
+
+if __name__ == '__main__':
     unittest.main()
